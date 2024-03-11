@@ -1,6 +1,4 @@
 import { ICipher } from "./ICipher";
-import {writeFileSync} from 'fs'
-import {resolve} from 'path'
 interface IDistribution {
     [index: string]: number
 }
