@@ -1,4 +1,3 @@
-import { vigenereCipher } from "./cipher/VigenereCipher";
 import readline from 'readline'
 import { CipherPrompts } from "./prompts/cipherPrompts";
 const app = readline.createInterface({

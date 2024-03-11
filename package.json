@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"tsc --watch\" \"nodemon dist\\index.js\"",
-    "ts": "tsc",
+    "ts": "tsc --watch",
     "js": "nodemon dist\\index.js",
-    "start": "concurrently \"ts\" \"js\""
+    "start": "tsc && node dist\\index.js"
   },
   "keywords": [],
   "author": "",

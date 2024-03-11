@@ -1,13 +1,23 @@
 import {Interface} from 'readline'
 import { vigenereCipher } from '../cipher/VigenereCipher'
+import chalk from 'chalk';
+
+const bold = chalk.bold
+const success = chalk.red.bold.greenBright
+const error = chalk.redBright.bold
+
 export class CipherPrompts {
+
     constructor(private rl: Interface) {}
-    private getLines() {
-        return '~'.repeat(30);
+
+    private getLines(color: string) {
+        
+        return chalk.keyword(color)('~'.repeat(30));
     }
-    entryPoint() {
-        this.rl.question(`${this.getLines()}\nВыберите функционал:\n` +
-        `1.Зашифровать сообщение\n2.Расшифровать сообщение\n3.Завершить программу\n${this.getLines()}\nВведите номер пункта:`, point => {
+    entryPoint(this: CipherPrompts) {
+
+        this.rl.question(`${this.getLines('yellow')}\n${bold('Выберите функционал:')}\n` +
+        `1.Зашифровать сообщение\n2.Расшифровать сообщение\n3.Завершить программу\n${this.getLines('yellow')}\nВведите номер пункта:`, point => {
             switch (point) {
                 case '1': {
                     this.inputEncrypt()
@@ -18,40 +28,64 @@ export class CipherPrompts {
                     return
                 }
                 case '3': {
-                    this.rl.close();
+                    this.closeRL();
                     return
                 }
                 default: {
-                    this.rl.write('Неверное значение')
-                    setTimeout(() => {
-                        this.entryPoint()
-                    }, 1000);
+                    this.getErrorMessage("Неверное значение", this.entryPoint)
                 }
             }
         })
     }
-    private inputEncrypt() {
+    private inputEncrypt(this: CipherPrompts) {
         this.rl.question('Введите открытый текст:', openText => {
-            this.rl.question('Введите ключ шифрования:', key => {
-                const cipherText = vigenereCipher.encrypt(openText, key)
-                this.rl.write(`Шифр текст: ${cipherText}`)
-                setTimeout(() => {
-                    this.entryPoint()
-                }, 1000);
-                
-            })
+            if (!this.isRusLang(openText)) {
+                this.getErrorMessage("Только кириллица", this.inputEncrypt)
+            }
+            else {
+                this.rl.question('Введите ключ шифрования:', key => {
+                    const cipherText = vigenereCipher.encrypt(openText, key)
+                    this.rl.write(`${bold('Шифр текст:')} ${success(cipherText)}`)
+                    setTimeout(() => {
+                        this.entryPoint()
+                    }, 3000);
+                })
+            }
+            
         })
     }
-    private inputDecrypt() {
+    private inputDecrypt(this: CipherPrompts) {
         this.rl.question('Введите зашифрованный текст:', cipherText => {
-            this.rl.question('Введите ключ шифрования:', key => {
-                const openText = vigenereCipher.decrypt(cipherText, key)
-                this.rl.write(`Открытый текст: ${openText}`)
-                setTimeout(() => {
-                    this.entryPoint()
-                }, 1000);
-            })
+            if (!this.isRusLang(cipherText)) {
+                this.getErrorMessage("Только кириллица", this.inputDecrypt)
+            }
+            else {
+                this.rl.question('Введите ключ шифрования:', key => {
+                    const openText = vigenereCipher.decrypt(cipherText, key)
+                    this.rl.write(`${bold('Открытый текст:')} ${success(openText)}`)
+                    setTimeout(() => {
+                        this.entryPoint()
+                    }, 3000);
+                })
+            }
         })
+    }
+    private getErrorMessage(message: string, cb?: () => void) {
+        this.rl.write(error(message))
+        if (cb) {
+            setTimeout(() => {
+                cb.bind(this)()
+             }, 2000);
+        }   
+    }
+    private isRusLang(text: string) {
+        return text.split('').every(letter => 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'.includes(letter))
+    }
+    private closeRL() {
+        this.rl.write(success('До свидания!'))
+        setTimeout(() => {
+            this.rl.close()
+         }, 2000);
     }
 }
 
