@@ -44,7 +44,11 @@ export class CipherPrompts {
             }
             else {
                 this.rl.question('Введите ключ шифрования:', key => {
-                    const cipherText = vigenereCipher.encrypt(openText, key)
+                    if (!this.isRusLang(key)) {
+                        this.getErrorMessage("Только кириллица", this.inputEncrypt)
+                        return;
+                    }
+                    const cipherText = vigenereCipher.encrypt(openText, key.toLowerCase())
                     this.rl.write(`${bold('Шифр текст:')} ${success(cipherText)}`)
                     setTimeout(() => {
                         this.entryPoint()
@@ -61,7 +65,12 @@ export class CipherPrompts {
             }
             else {
                 this.rl.question('Введите ключ шифрования:', key => {
-                    const openText = vigenereCipher.decrypt(cipherText, key)
+                    if (!this.isRusLang(key)) {
+                        this.getErrorMessage("Только кириллица", this.inputDecrypt)
+                        return;
+                    }
+                    const openText = vigenereCipher.decrypt(cipherText, key.toLowerCase())
+                    
                     this.rl.write(`${bold('Открытый текст:')} ${success(openText)}`)
                     setTimeout(() => {
                         this.entryPoint()
@@ -79,10 +88,10 @@ export class CipherPrompts {
         }   
     }
     private isRusLang(text: string) {
-        return text.split('').every(letter => 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'.includes(letter))
+        return text.split('').every(letter => /[а-яё\s]/i.test(letter))
     }
     private closeRL() {
-        this.rl.write(success('До свидания!'))
+        this.rl.write(success(`До свидания!`))
         setTimeout(() => {
             this.rl.close()
          }, 2000);

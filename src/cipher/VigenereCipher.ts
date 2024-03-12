@@ -37,8 +37,9 @@ class VigenereCipher implements ICipher {
     // }
     public encrypt(openText: string, secretKey: string) {
 
-        const textWithoutSpaces = this.cutSpaces(openText)
-        const spacesIndexes: number[] = this.getSpaceIndexes(openText)
+        const textWithoutSpaces = this.cutSpaces(openText).toLowerCase()
+        const spacesIndexes = this.getIndexesByRegExp(openText, /\s/)
+        const upperIndexes = this.getIndexesByRegExp(openText, /[А-Я]/)
         const repeatedKey = this.repeatKey(secretKey, textWithoutSpaces.length)
         let cipherText = '';
         for (let i = 0; i < repeatedKey.length; i++) {
@@ -47,12 +48,15 @@ class VigenereCipher implements ICipher {
             cipherText += this.alphabet[(rowLetterIdx + ceilLetterIdx) % this.alphabet.length]
         }
         cipherText = this.insertSpaces(spacesIndexes, cipherText)
+        cipherText = this.upperReplace(upperIndexes, cipherText)
         return cipherText
     }
 
     public decrypt(cipherText: string, secretKey: string) {
-        const cipherWithoutSpaces = this.cutSpaces(cipherText)
-        const spacesIndexes: number[] = this.getSpaceIndexes(cipherText)
+        const cipherWithoutSpaces = this.cutSpaces(cipherText).toLowerCase();
+        const spacesIndexes = this.getIndexesByRegExp(cipherText, /\s/)
+        const upperIndexes = this.getIndexesByRegExp(cipherText, /[А-Я]/)
+        
         const repeatedKey = this.repeatKey(secretKey, cipherWithoutSpaces.length)
         let openText = '';
         for (let i = 0; i < repeatedKey.length; i++) {
@@ -61,12 +65,14 @@ class VigenereCipher implements ICipher {
             openText += this.alphabet[(ceilLetterIdx + this.alphabet.length - rowLetterIdx) % this.alphabet.length]
         }
         openText = this.insertSpaces(spacesIndexes, openText)
+        openText = this.upperReplace(upperIndexes, openText)
         return openText
     }
     
     public hack(cipherText: string) {
-        const cipherWithoutSpaces = this.cutSpaces(cipherText)
-        const spacesIndexes: number[] = this.getSpaceIndexes(cipherText)
+        const cipherWithoutSpaces = this.cutSpaces(cipherText).toLowerCase();
+        const spacesIndexes = this.getIndexesByRegExp(cipherText, /\s/)
+        const upperIndexes = this.getIndexesByRegExp(cipherText, /[А-Я]/)
         
         const distances = this.getDistancesCombinations(cipherWithoutSpaces)
         const divisors = distances.map(dist => this.factorize(dist)).flat();
@@ -178,8 +184,8 @@ class VigenereCipher implements ICipher {
         }
         return distances;
     }
-    private getSpaceIndexes(text: string) {
-        return text.split('').map((symb, idx) => /\s/.test(symb) ? idx : NaN)
+    private getIndexesByRegExp(text: string, regExp: RegExp) {
+        return text.split('').map((symb, idx) => regExp.test(symb) ? idx : NaN)
         .filter(symb => !isNaN(symb))
     }
     private cutSpaces(text: string) {
@@ -196,6 +202,13 @@ class VigenereCipher implements ICipher {
         let resultText = text
         spacesIndexes.forEach(idx => {
             resultText = resultText.substring(0, idx) + ' ' + resultText.substring(idx);
+        })
+        return resultText
+    }
+    private upperReplace(spacesIndexes: number[], text: string) {
+        let resultText = text
+        spacesIndexes.forEach(idx => {
+            resultText = resultText.substring(0, idx) + resultText[idx].toUpperCase() + resultText.substring(idx + 1);
         })
         return resultText
     }
